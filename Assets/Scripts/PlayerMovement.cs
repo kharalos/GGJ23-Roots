@@ -17,21 +17,60 @@ public class PlayerMovement : MonoBehaviour
     public float yRotation = 0f;
     public float torqueSpeed = 10f;
     
+    public float maxBoostFuel = 100f;
+    public float currentBoostFuel;
+    public float boostFuelConsumption = 10f;
+    public float boostFuelRegeneration = 1f;
+    public float boostFuelCooldownTimer = 0f;
+    public float boostFuelCooldownDuration = 2f;
+
     [SerializeField] private EngineSystem engineSystem;
+    [SerializeField] private VolumeProfileManager volumeProfileManager;
+    [SerializeField] private HUDManager hudManager;
 
     private Rigidbody _rigidbody;
 
     private void Start()
     {
+        currentBoostFuel = maxBoostFuel;
         Cursor.lockState = CursorLockMode.Locked;
         _rigidbody = GetComponent<Rigidbody>();
     }
 
-    void Update()
+    private void Update()
     {
         verticalInput = Input.GetAxis("Vertical");
         horizontalInput = Input.GetAxis("Horizontal");
-        boostActive = Input.GetKey(KeyCode.LeftShift);
+        var shiftInput = Input.GetKey(KeyCode.LeftShift);
+        
+        if (verticalInput > 0f && shiftInput && currentBoostFuel > 0f)
+        {
+            boostActive = true;
+            currentBoostFuel -= boostFuelConsumption * Time.deltaTime;
+        }
+        else if (currentBoostFuel <= 0f)
+        {
+            boostActive = false;
+            if (boostFuelCooldownTimer <= 0)
+            {
+                hudManager.SetBoostSymbol(true);
+            }
+            boostFuelCooldownTimer += Time.deltaTime;
+            if (boostFuelCooldownTimer >= boostFuelCooldownDuration)
+            {
+                currentBoostFuel += boostFuelRegeneration * Time.deltaTime;
+                boostFuelCooldownTimer = 0f;
+                hudManager.SetBoostSymbol(false);
+            }
+        }
+        else
+        {
+            boostActive = false;
+            currentBoostFuel += boostFuelRegeneration * Time.deltaTime;
+        }
+        volumeProfileManager.AddChroma(Time.deltaTime * (boostActive ? 2f : -2f));
+        currentBoostFuel = Mathf.Clamp(currentBoostFuel, 0f, maxBoostFuel);
+        hudManager.SetFuelFillBar(currentBoostFuel / maxBoostFuel);
 
         _rigidbody.AddRelativeForce(Vector3.forward * (speed * verticalInput * (boostActive ? boostSpeed : 1)));
         _rigidbody.AddRelativeForce(Vector3.right * (turnSpeed * horizontalInput));
@@ -70,5 +109,11 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Planet"))
+        {
+            Debug.Log($"Crashed into {other.transform.parent.name}");
+        }
+    }
 }

@@ -13,6 +13,7 @@ public class Laser : MonoBehaviour
 {
     [SerializeField] private LaserType laserType;
     [SerializeField] private Renderer laserRenderer;
+    [SerializeField] private bool enableLogging = true;
 
     [SerializeField, BoxGroup("Blue")] private float blueSpeed = 10f;
     [SerializeField, BoxGroup("Blue")] private float blueLifeTime = 2f;
@@ -61,12 +62,13 @@ public class Laser : MonoBehaviour
         transform.Translate(Vector3.forward * (_speed * Time.deltaTime), Space.Self);
     }
     
-    // private void OnTriggerEnter2D(Collider2D other)
-    // {
-    //     if (other.CompareTag("Enemy"))
-    //     {
-    //         other.GetComponent<Enemy>().TakeDamage(damage);
-    //         Destroy(gameObject);
-    //     }
-    // }
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Planet"))
+        {
+            if(enableLogging)
+                Debug.Log($"Laser collided with {other.transform.parent.name}");
+            Destroy(gameObject);
+        }
+    }
 }
