@@ -17,19 +17,19 @@ public class Laser : MonoBehaviour
 
     [SerializeField, BoxGroup("Blue")] private float blueSpeed = 10f;
     [SerializeField, BoxGroup("Blue")] private float blueLifeTime = 2f;
-    [SerializeField, BoxGroup("Blue")] private float blueDamage = 1f;
+    [SerializeField, BoxGroup("Blue")] private int blueDamage = 1;
     [SerializeField, BoxGroup("Blue")] private AudioClip blueLaserSound;
     [SerializeField, BoxGroup("Blue")] private Material blueLaserMaterial;
     
     [SerializeField, BoxGroup("Red")] private float redSpeed = 10f;
     [SerializeField, BoxGroup("Red")] private float redLifeTime = 2f;
-    [SerializeField, BoxGroup("Red")] private float redDamage = 1f;
+    [SerializeField, BoxGroup("Red")] private int redDamage = 1;
     [SerializeField, BoxGroup("Red")] private AudioClip redLaserSound;
     [SerializeField, BoxGroup("Red")] private Material redLaserMaterial;
 
     private float _speed;
     private float _lifeTime;
-    private float _damage;
+    private int _damage;
     private AudioClip _audioClip;
     
     public void Initialize(LaserType type)
@@ -58,7 +58,6 @@ public class Laser : MonoBehaviour
 
     private void FixedUpdate()
     {
-        //move laser local forward
         transform.Translate(Vector3.forward * (_speed * Time.deltaTime), Space.Self);
     }
     
@@ -68,6 +67,14 @@ public class Laser : MonoBehaviour
         {
             if(enableLogging)
                 Debug.Log($"Laser collided with {other.transform.parent.name}");
+            Destroy(gameObject);
+        }
+        
+        if (other.CompareTag("Enemy"))
+        {
+            if(enableLogging)
+                Debug.Log($"Laser hit {other.transform.name}");
+            other.GetComponent<Enemy>().Hit(_damage);
             Destroy(gameObject);
         }
     }

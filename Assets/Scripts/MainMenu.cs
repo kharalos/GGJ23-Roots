@@ -13,6 +13,7 @@ public class MainMenu : MonoBehaviour
         controlsWindow.SetActive(false);
         controlsWindow.transform.localScale = Vector3.zero;
         _controlsWindowActive = false;
+        Time.timeScale = 1;
     }
 
     public void Play()

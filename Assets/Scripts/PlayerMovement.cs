@@ -113,7 +113,10 @@ public class PlayerMovement : MonoBehaviour
     {
         if (other.CompareTag("Planet"))
         {
-            Debug.Log($"Crashed into {other.transform.parent.name}");
+            var planet = other.transform.parent.name;
+            Debug.Log($"Crashed into {planet}");
+            hudManager.GameOver($"Crashed into {planet}");
+            Destroy(gameObject);
         }
     }
 }
