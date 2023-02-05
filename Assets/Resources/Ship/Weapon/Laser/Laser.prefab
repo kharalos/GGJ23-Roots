@@ -131,12 +131,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   laserType: 0
   laserRenderer: {fileID: 5599727083013228570}
-  blueSpeed: 20
+  blueSpeed: 40
   blueLifeTime: 2
   blueDamage: 1
   blueLaserSound: {fileID: 8300000, guid: 64bbdebe0145e9e408d16843c566fec7, type: 3}
   blueLaserMaterial: {fileID: 2100000, guid: 07cff49ad65352a4795b4741158d5d84, type: 2}
-  redSpeed: 10
+  redSpeed: 20
   redLifeTime: 3
   redDamage: 2
   redLaserSound: {fileID: 8300000, guid: 9854e939d392d8e46926119b8dccac2a, type: 3}
