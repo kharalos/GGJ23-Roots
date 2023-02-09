@@ -56,6 +56,11 @@ public class Enemy : MonoBehaviour
                 _health = yellowHealth;
                 break;
         }
+
+        var enemyName = enemyType + " Fungi";
+        gameObject.name = enemyName;
+        var hitInfo = GetComponent<HitInfo>();
+        hitInfo.name = enemyName;
     }
     
     private void Update()

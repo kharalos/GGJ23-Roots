@@ -11,9 +11,9 @@ GameObject:
   - component: {fileID: 5599727083013228568}
   - component: {fileID: 5599727083013228571}
   - component: {fileID: 5599727083013228570}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Model
-  m_TagString: Untagged
+  m_TagString: Projectile
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -95,9 +95,9 @@ GameObject:
   - component: {fileID: 5599727083152629743}
   - component: {fileID: 5768965455037322153}
   - component: {fileID: 6760440271160160281}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Laser
-  m_TagString: Untagged
+  m_TagString: Projectile
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -133,13 +133,13 @@ MonoBehaviour:
   laserType: 0
   laserRenderer: {fileID: 5599727083013228570}
   enableLogging: 1
-  blueSpeed: 40
+  blueSpeed: 120
   blueLifeTime: 5
   blueDamage: 1
   blueLaserSound: {fileID: 8300000, guid: 64bbdebe0145e9e408d16843c566fec7, type: 3}
   blueLaserMaterial: {fileID: 2100000, guid: 07cff49ad65352a4795b4741158d5d84, type: 2}
-  redSpeed: 20
-  redLifeTime: 10
+  redSpeed: 200
+  redLifeTime: 20
   redDamage: 2
   redLaserSound: {fileID: 8300000, guid: 9854e939d392d8e46926119b8dccac2a, type: 3}
   redLaserMaterial: {fileID: 2100000, guid: a29f1e6596c489d4eb05223bf4b97aba, type: 2}

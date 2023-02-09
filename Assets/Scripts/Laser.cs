@@ -53,7 +53,11 @@ public class Laser : MonoBehaviour
                 break;
         }
         Destroy(gameObject, _lifeTime);
-        AudioSource.PlayClipAtPoint(_audioClip, transform.position);
+    }
+    
+    public AudioClip GetAudioClip()
+    {
+        return _audioClip;
     }
 
     private void FixedUpdate()
