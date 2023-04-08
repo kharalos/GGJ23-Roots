@@ -91,9 +91,9 @@ MonoBehaviour:
   redMaterial: {fileID: 2100000, guid: 46814af311b77074a862032147ed97f3, type: 2}
   yellowMaterial: {fileID: 2100000, guid: 3d8c824d990ab1145bbfb236778a5b68, type: 2}
   deathSound: {fileID: 8300000, guid: 3711fee87ce2c6d44a9f9fa90dac64e7, type: 3}
-  blueOrbitSpeed: 1
-  redOrbitSpeed: 2
-  yellowOrbitSpeed: 0.5
+  blueOrbitSpeed: 10
+  redOrbitSpeed: 5
+  yellowOrbitSpeed: 1
   blueHealth: 1
   redHealth: 2
   yellowHealth: 5
@@ -117,7 +117,7 @@ AudioSource:
   SpatializePostEffects: 0
   Priority: 128
   DopplerLevel: 1
-  MinDistance: 40
+  MinDistance: 20
   MaxDistance: 1000
   Pan2D: 0
   rolloffMode: 0
