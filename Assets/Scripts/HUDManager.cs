@@ -28,6 +28,12 @@ public class HUDManager : MonoBehaviour
     
     [SerializeField] private GameObject gameOverPanel;
     [SerializeField] private TMP_Text causeOfDeathText;
+    
+    [SerializeField] private TMP_Text rangeText;
+    [SerializeField] private TMP_Text sizeText;
+    [SerializeField] private TMP_Text fireRateText;
+    [SerializeField] private GameObject blueLaserObj;
+    [SerializeField] private GameObject redLaserObj;
 
     private RectTransform _rectTransform;
 
@@ -118,5 +124,14 @@ public class HUDManager : MonoBehaviour
     public void ChangeScene(int id)
     {
         SceneManager.LoadScene(id);
+    }
+
+    public void SetLaserWeapon(bool isBlue, float autoTargetRadius, float autoTargetMaxDistance, float fireRate)
+    {
+        blueLaserObj.SetActive(isBlue);
+        redLaserObj.SetActive(!isBlue);
+        rangeText.text = $"RANGE {autoTargetMaxDistance}";
+        sizeText.text = $"SIZE {autoTargetRadius}";
+        fireRateText.text = $"{fireRate:0.0}s COOLDOWN";
     }
 }

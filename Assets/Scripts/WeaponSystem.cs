@@ -14,8 +14,6 @@ public class WeaponSystem : MonoBehaviour
     [SerializeField] private HUDManager hudManager;
     [SerializeField] private LayerMask weaponTrackerLayerMask;
     [SerializeField] private LayerMask autoTargetLayerMask;
-    [SerializeField] private float autoTargetRadius = 10f;
-    [SerializeField] private float autoTargetMaxDistance = 100f;
     [SerializeField] private AudioSource audioSource;
     
     [SerializeField] private PrimaryWeapon primaryWeapon;
@@ -28,6 +26,10 @@ public class WeaponSystem : MonoBehaviour
     private Transform _firePoint;
     private float _nextFire = 0.0f;
     private Camera _camera;
+    
+    private float _fireRate;
+    private float _autoTargetRadius = 10f;
+    private float _autoTargetMaxDistance = 100f;
 
     private void Start()
     {
@@ -44,11 +46,11 @@ public class WeaponSystem : MonoBehaviour
             switch (primaryWeapon)
             {
                 case PrimaryWeapon.BlueLaser:
-                    _nextFire = Time.time + blueFireRate;
+                    _nextFire = Time.time + _fireRate;
                     Shoot(LaserType.Blue);
                     break;
                 case PrimaryWeapon.RedLaser:
-                    _nextFire = Time.time + redFireRate;
+                    _nextFire = Time.time + _fireRate;
                     Shoot(LaserType.Red);
                     break;
             }
@@ -74,8 +76,8 @@ public class WeaponSystem : MonoBehaviour
             SetPrimaryWeapon(primaryWeaponInventory[currentIndex]);
         }
 
-        if (Physics.SphereCast(_camera.transform.position, autoTargetRadius, _camera.transform.forward,
-                out var sphereHit, autoTargetMaxDistance, autoTargetLayerMask))
+        if (Physics.SphereCast(_camera.transform.position, _autoTargetRadius, _camera.transform.forward,
+                out var sphereHit, _autoTargetMaxDistance, autoTargetLayerMask))
         {
             transform.LookAt(sphereHit.point);
             //convert lookat to lerp
@@ -115,18 +117,23 @@ public class WeaponSystem : MonoBehaviour
         switch (primaryWeapon)
         {
             case PrimaryWeapon.None:
-                autoTargetRadius = 0f;
-                autoTargetMaxDistance = 0f;
+                _autoTargetRadius = 0f;
+                _autoTargetMaxDistance = 0f;
+                _fireRate = 0f;
                 break;
             case PrimaryWeapon.BlueLaser:
-                autoTargetRadius = 10f;
-                autoTargetMaxDistance = 100f;
+                _autoTargetRadius = 10f;
+                _autoTargetMaxDistance = 100f;
+                _fireRate = blueFireRate;
                 break;
             case PrimaryWeapon.RedLaser:
-                autoTargetRadius = 30f;
-                autoTargetMaxDistance = 300f;
+                _autoTargetRadius = 30f;
+                _autoTargetMaxDistance = 300f;
+                _fireRate = redFireRate;
                 break;
         }
+        
+        hudManager.SetLaserWeapon(primaryWeapon is PrimaryWeapon.BlueLaser, _autoTargetRadius, _autoTargetMaxDistance, _fireRate);
     }
 
     private void Shoot(LaserType laserType)
