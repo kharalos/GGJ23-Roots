@@ -29,11 +29,11 @@ public class Enemy : MonoBehaviour
     [SerializeField] private int yellowHealth = 1;
 
     private Transform _target;
-    private string _targetTag;
+    private EnemyManager.PlanetType _targetTag;
     private float _orbitSpeed;
     private int _health;
 
-    public void Initialize(EnemyType type, Transform target, string planet)
+    public void Initialize(EnemyType type, Transform target, EnemyManager.PlanetType planet)
     {
         enemyType = type;
         _target = target;
@@ -73,7 +73,7 @@ public class Enemy : MonoBehaviour
         _health -= damage;
         if (_health <= 0)
         {
-            FindObjectOfType<EnemyManager>().EnemyDestroyed(_targetTag);
+            EnemyManager.Instance.EnemyDestroyed(_targetTag);
             AudioSource.PlayClipAtPoint(deathSound, transform.position);
             Destroy(gameObject);
         }

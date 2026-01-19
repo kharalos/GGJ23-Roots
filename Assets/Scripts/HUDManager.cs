@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
@@ -10,14 +11,14 @@ public enum TrackedType
     None,
     Neutral,
     Friendly,
-    Enemy
+    Enemy,
+    Planet
 }
 
 public class HUDManager : MonoBehaviour
 {
-    [SerializeField] private RectTransform tracker;
-    [SerializeField] private Image trackerImage;
-    [SerializeField] private TMP_Text trackerTmp;
+    [SerializeField] private Tracker weaponTracker;
+    [SerializeField] private Tracker[] planetTrackers;
     [SerializeField] private float trackerLerpMultiplier = 2f;
     [SerializeField] private float trackerTextAlpha = .2f;
     [SerializeField] private Image fuelFillBar;
@@ -25,6 +26,7 @@ public class HUDManager : MonoBehaviour
     [SerializeField] private TMP_Text enemyCountText;
     [SerializeField] private TMP_Text corruptionText;
     [SerializeField] private Image corruptionFillBar;
+    [SerializeField] private Camera mainCamera;
     
     [SerializeField] private GameObject gameOverPanel;
     [SerializeField] private TMP_Text causeOfDeathText;
@@ -46,41 +48,7 @@ public class HUDManager : MonoBehaviour
     public void SetWeaponTrackingInfo(Vector2 position, TrackedType type, string targetName = "", float targetDistance = 0f)
     {
         var sizeDelta = _rectTransform.sizeDelta;
-        var targetPosition = new Vector2(position.x * sizeDelta.x - sizeDelta.x * 0.5f,
-            position.y * sizeDelta.y - sizeDelta.y * 0.5f);
-
-        tracker.anchoredPosition = Vector2.Lerp(
-            tracker.anchoredPosition, targetPosition, Time.deltaTime * trackerLerpMultiplier);
-
-
-        trackerTmp.text = type == TrackedType.None ?
-            "" : $"{targetName} <color=#81FF88>{targetDistance:0.0}</color><color=white>m</color>";
-        
-        var targetColor = Color.white;
-        switch (type)
-        {
-            case TrackedType.Neutral:
-                targetColor = new Color(1f, 1f, 0.24f);
-                break;
-            case TrackedType.Friendly:
-                targetColor = new Color(0.3f, 0.39f, 1f);
-                break;
-            case TrackedType.Enemy:
-                targetColor = new Color(1f, 0.35f, 0.24f);
-                break;
-        }
-        var targetSize = 1f;
-        if (type != TrackedType.None)
-        {
-            targetSize = 1f - targetDistance / 100f;
-            targetSize = Mathf.Clamp(targetSize, 0.3f, 1f);
-        }
-        
-        trackerImage.transform.localScale = Vector3.Lerp(trackerImage.transform.localScale,
-            Vector3.one * targetSize, Time.deltaTime * trackerLerpMultiplier);
-        trackerImage.color = Color.Lerp(trackerImage.color, targetColor, Time.deltaTime * trackerLerpMultiplier);
-        targetColor.a = trackerTextAlpha;
-        trackerTmp.color = Color.Lerp(trackerTmp.color, targetColor, Time.deltaTime * trackerLerpMultiplier);
+        weaponTracker.SetWeaponTrackingInfo(sizeDelta, position, type, targetName, targetDistance);
     }
 
     public void SetFuelFillBar(float fillAmount)
@@ -93,7 +61,7 @@ public class HUDManager : MonoBehaviour
         boostSymbol.DOColor(exhausted ? Color.red : Color.white, .2f);
     }
 
-    public void SetEnemyCountText(int totalEnemies, int enemiesOnMercury, int enemiesOnVenus, int enemiesOnEarth, int enemiesOnMars,
+    public void UpdateEnemyCounts(int totalEnemies, int enemiesOnMercury, int enemiesOnVenus, int enemiesOnEarth, int enemiesOnMars,
         int enemiesOnJupiter, int enemiesOnSaturn, int enemiesOnUranus, int enemiesOnNeptune)
     {
         enemyCountText.text = $"<b><color=white>{totalEnemies}</color></b> Enemies:\n" +
@@ -105,6 +73,56 @@ public class HUDManager : MonoBehaviour
                               $"<color=yellow>Saturn</color>: {enemiesOnSaturn}\n" +
                               $"<color=#008080ff>Uranus</color>: {enemiesOnUranus}\n" +
                               $"<color=#00ffffff>Neptune</color>: {enemiesOnNeptune}";
+    }
+    
+    public void UpdatePlanetTrackers(int[] planetEnemyCounts, Transform[] planets)
+    {
+        for (int i = 0; i < planetEnemyCounts.Length; i++)
+        {
+            var planetType = (EnemyManager.PlanetType)i;
+            var planetTracker = planetTrackers[i];
+            var enemyCount = planetEnemyCounts[i];
+            var status = enemyCount > 0;
+            planetTracker.gameObject.SetActive(status);
+            
+            if(!status) continue;
+            
+            // var screenPoint = mainCamera.WorldToViewportPoint(planets[i].position);
+            
+            var viewport = mainCamera.WorldToViewportPoint(planets[i].position); // x,y in [0..1], z distance
+            Vector2 viewportPos = new Vector2(viewport.x, viewport.y);
+            Vector2 center = new Vector2(0.5f, 0.5f);
+
+            Vector2 screenPoint;
+            // If the object is visible and inside the viewport, keep its position.
+            bool isInside = viewport.z >= 0f && viewportPos.x >= 0f && viewportPos.x <= 1f && viewportPos.y >= 0f && viewportPos.y <= 1f;
+            if (isInside)
+            {
+                screenPoint = viewportPos;
+            }
+            else
+            {
+                // Compute direction from screen center to the point.
+                Vector2 dir = viewportPos - center;
+
+                // If behind the camera, invert direction so the indicator points toward the object.
+                if (viewport.z < 0f)
+                    dir = -dir;
+
+                // Avoid zero direction
+                if (dir.sqrMagnitude < 1e-6f)
+                    dir = Vector2.up * 0.0001f;
+
+                // Project onto the viewport rectangle edge while keeping direction.
+                float max = Mathf.Max(Mathf.Abs(dir.x), Mathf.Abs(dir.y));
+                screenPoint = center + (dir / max) * 0.5f;
+
+                // Ensure final coords are inside [0,1]
+                screenPoint = new Vector2(Mathf.Clamp01(screenPoint.x), Mathf.Clamp01(screenPoint.y));
+            }
+            
+            planetTracker.PlanetTracking(_rectTransform.sizeDelta, screenPoint, planetType, enemyCount);
+        }
     }
 
     public void SetCorruptionDisplay(float corruption)

@@ -6,6 +6,8 @@ using Random = UnityEngine.Random;
 
 public class EnemyManager : MonoBehaviour
 {
+    public static EnemyManager Instance;
+    
     [SerializeField] private Transform mercury;
     [SerializeField] private float mercuryMin = 10;
     [SerializeField] private float mercuryMax = 15;
@@ -37,8 +39,6 @@ public class EnemyManager : MonoBehaviour
     [SerializeField] private int currentEnemyCount = 0;
     [SerializeField] private float spawnIntervalMin = 3f;
     [SerializeField] private float spawnIntervalMax = 5f;
-    [SerializeField] private string[] planets = new string[8] {"Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"};
-    
     [SerializeField] private int enemiesOnMercury = 0;
     [SerializeField] private int enemiesOnVenus = 0;
     [SerializeField] private int enemiesOnEarth = 0;
@@ -52,46 +52,53 @@ public class EnemyManager : MonoBehaviour
     [SerializeField] private float corruptionRate = 0.1f;
 
     private float _corruption;
+    private Transform[] _planets = new Transform[8];
 
-    private int _enemyTypeCount;
-
-    public void EnemyDestroyed(string targetTag)
+    public void EnemyDestroyed(PlanetType targetTag)
     {
         switch (targetTag)
         {
-            case "Mercury":
+            case PlanetType.Mercury:
                 enemiesOnMercury--;
                 break;
-            case "Venus":
+            case PlanetType.Venus:
                 enemiesOnVenus--;
                 break;
-            case "Earth":
+            case PlanetType.Earth:
                 enemiesOnEarth--;
                 break;
-            case "Mars":
+            case PlanetType.Mars:
                 enemiesOnMars--;
                 break;
-            case "Jupiter":
+            case PlanetType.Jupiter:
                 enemiesOnJupiter--;
                 break;
-            case "Saturn":
+            case PlanetType.Saturn:
                 enemiesOnSaturn--;
                 break;
-            case "Uranus":
+            case PlanetType.Uranus:
                 enemiesOnUranus--;
                 break;
-            case "Neptune":
+            case PlanetType.Neptune:
                 enemiesOnNeptune--;
                 break;
         }
+        
         currentEnemyCount--;
         _corruption -= 0.1f;
-        hudManager.SetEnemyCountText(currentEnemyCount, enemiesOnMercury, enemiesOnVenus,
+        hudManager.UpdateEnemyCounts(currentEnemyCount, enemiesOnMercury, enemiesOnVenus,
             enemiesOnEarth, enemiesOnMars, enemiesOnJupiter, enemiesOnSaturn, enemiesOnUranus, enemiesOnNeptune);
     }
 
     private void Start()
     {
+        Instance = this;
+        
+        _planets = new[]
+        {
+            mercury, venus, earth, mars, jupiter, saturn, uranus, neptune
+        };
+        
         enemiesOnMercury = 0;
         enemiesOnVenus = 0;
         enemiesOnEarth = 0;
@@ -101,7 +108,6 @@ public class EnemyManager : MonoBehaviour
         enemiesOnUranus = 0;
         enemiesOnNeptune = 0;
         
-        _enemyTypeCount = Enum.GetNames(typeof(EnemyType)).Length;
         StartCoroutine(SpawnEnemies());
         
         Time.timeScale = 1;
@@ -113,7 +119,7 @@ public class EnemyManager : MonoBehaviour
         {
             SpawnRandomEnemy();
         }
-        hudManager.SetEnemyCountText(currentEnemyCount, enemiesOnMercury, enemiesOnVenus,
+        hudManager.UpdateEnemyCounts(currentEnemyCount, enemiesOnMercury, enemiesOnVenus,
             enemiesOnEarth, enemiesOnMars, enemiesOnJupiter, enemiesOnSaturn, enemiesOnUranus, enemiesOnNeptune);
         while (true)
         {
@@ -122,12 +128,12 @@ public class EnemyManager : MonoBehaviour
             if (currentEnemyCount < maxEnemyCount)
             {
                 SpawnRandomEnemy();
-                hudManager.SetEnemyCountText(currentEnemyCount, enemiesOnMercury, enemiesOnVenus,
+                hudManager.UpdateEnemyCounts(currentEnemyCount, enemiesOnMercury, enemiesOnVenus,
                     enemiesOnEarth, enemiesOnMars, enemiesOnJupiter, enemiesOnSaturn, enemiesOnUranus, enemiesOnNeptune);
             }
         }
     }
-
+    
     private void Update()
     {
         _corruption += currentEnemyCount * Time.deltaTime * corruptionRate;
@@ -138,107 +144,104 @@ public class EnemyManager : MonoBehaviour
         }
         _corruption = Mathf.Clamp(_corruption, 0f, 1f);
         hudManager.SetCorruptionDisplay(_corruption);
+        
+        hudManager.UpdatePlanetTrackers(new []{enemiesOnMercury, enemiesOnVenus, enemiesOnEarth,
+            enemiesOnMars, enemiesOnJupiter, enemiesOnSaturn, enemiesOnUranus, enemiesOnNeptune}, _planets);
     }
 
     private void SpawnRandomEnemy()
     {
         currentEnemyCount++;
-        var planet = planets[Random.Range(0, planets.Length)];
-        var enemyType = (EnemyType) Random.Range(0, _enemyTypeCount);
+        var planet = (PlanetType) Random.Range(0, Enum.GetNames(typeof(PlanetType)).Length);
+        var enemyType = (EnemyType) Random.Range(0, Enum.GetNames(typeof(EnemyType)).Length);
         SpawnEnemy(planet, enemyType);
     }
 
-    private void SpawnEnemy(string planet, EnemyType type)
+    private void SpawnEnemy(PlanetType planet, EnemyType type)
     {
+        var position = Vector3.zero;
+        Transform targetPlanetTransform = null;
+        
         switch (planet)
         {
-            case "Mercury":
+            case PlanetType.Mercury:
                 Vector3 randomDirection = Random.onUnitSphere;
                 float randomDistance = Random.Range(mercuryMin, mercuryMax);
-                Vector3 randomPosition = mercury.position + randomDirection * randomDistance;
-                
-                var enemyGo = Instantiate(enemyPrefab, randomPosition, Quaternion.identity);
-                var enemy = enemyGo.GetComponent<Enemy>();
-                enemy.Initialize(type, mercury, "Mercury");
+                position = mercury.position + randomDirection * randomDistance;
+                targetPlanetTransform = mercury;
                 enemiesOnMercury++;
                 break;
             
-            case "Venus":
+            case PlanetType.Venus:
                 randomDirection = Random.onUnitSphere;
                 randomDistance = Random.Range(venusMin, venusMax);
-                randomPosition = venus.position + randomDirection * randomDistance;
-                
-                enemyGo = Instantiate(enemyPrefab, randomPosition, Quaternion.identity);
-                enemy = enemyGo.GetComponent<Enemy>();
-                enemy.Initialize(type, venus, "Venus");
+                position = venus.position + randomDirection * randomDistance;
+                targetPlanetTransform = venus;
                 enemiesOnVenus++;
                 break;
             
-            case "Earth":
+            case PlanetType.Earth:
                 randomDirection = Random.onUnitSphere;
                 randomDistance = Random.Range(earthMin, earthMax);
-                randomPosition = earth.position + randomDirection * randomDistance;
-                
-                enemyGo = Instantiate(enemyPrefab, randomPosition, Quaternion.identity);
-                enemy = enemyGo.GetComponent<Enemy>();
-                enemy.Initialize(type, earth, "Earth");
+                position = earth.position + randomDirection * randomDistance;
+                targetPlanetTransform = earth;
                 enemiesOnEarth++;
                 break;
             
-            case "Mars":
+            case PlanetType.Mars:
                 randomDirection = Random.onUnitSphere;
                 randomDistance = Random.Range(marsMin, marsMax);
-                randomPosition = mars.position + randomDirection * randomDistance;
-                
-                enemyGo = Instantiate(enemyPrefab, randomPosition, Quaternion.identity);
-                enemy = enemyGo.GetComponent<Enemy>();
-                enemy.Initialize(type, mars, "Mars");
+                position = mars.position + randomDirection * randomDistance;
+                targetPlanetTransform = mars;
                 enemiesOnMars++;
                 break;
             
-            case "Jupiter":
+            case PlanetType.Jupiter:
                 randomDirection = Random.onUnitSphere;
                 randomDistance = Random.Range(jupiterMin, jupiterMax);
-                randomPosition = jupiter.position + randomDirection * randomDistance;
-                
-                enemyGo = Instantiate(enemyPrefab, randomPosition, Quaternion.identity);
-                enemy = enemyGo.GetComponent<Enemy>();
-                enemy.Initialize(type, jupiter, "Jupiter");
+                position = jupiter.position + randomDirection * randomDistance;
+                targetPlanetTransform = jupiter;
                 enemiesOnJupiter++;
                 break;
             
-            case "Saturn":
+            case PlanetType.Saturn:
                 randomDirection = Random.onUnitSphere;
                 randomDistance = Random.Range(saturnMin, saturnMax);
-                randomPosition = saturn.position + randomDirection * randomDistance;
-                
-                enemyGo = Instantiate(enemyPrefab, randomPosition, Quaternion.identity);
-                enemy = enemyGo.GetComponent<Enemy>();
-                enemy.Initialize(type, saturn, "Saturn");
+                position = saturn.position + randomDirection * randomDistance;
+                targetPlanetTransform = saturn;
                 enemiesOnSaturn++;
                 break;
             
-            case "Uranus":
+            case PlanetType.Uranus:
                 randomDirection = Random.onUnitSphere;
                 randomDistance = Random.Range(uranusMin, uranusMax);
-                randomPosition = uranus.position + randomDirection * randomDistance;
-                
-                enemyGo = Instantiate(enemyPrefab, randomPosition, Quaternion.identity);
-                enemy = enemyGo.GetComponent<Enemy>();
-                enemy.Initialize(type, uranus, "Uranus");
+                position = uranus.position + randomDirection * randomDistance;
+                targetPlanetTransform = uranus;
                 enemiesOnUranus++;
                 break;
             
-            case "Neptune":
+            case PlanetType.Neptune:
                 randomDirection = Random.onUnitSphere;
                 randomDistance = Random.Range(neptuneMin, neptuneMax);
-                randomPosition = neptune.position + randomDirection * randomDistance;
-                
-                enemyGo = Instantiate(enemyPrefab, randomPosition, Quaternion.identity);
-                enemy = enemyGo.GetComponent<Enemy>();
-                enemy.Initialize(type, neptune, "Neptune");
+                position = neptune.position + randomDirection * randomDistance;
+                targetPlanetTransform = neptune;
                 enemiesOnNeptune++;
                 break;
         }
+        var enemyGo = Instantiate(enemyPrefab, position, Quaternion.identity);
+        var comp = enemyGo.GetComponent<Enemy>();
+        comp.Initialize(type, targetPlanetTransform, planet);
+    }
+    
+    public enum PlanetType
+    {
+        Mercury,
+        Venus,
+        Earth,
+        Mars,
+        Jupiter,
+        Saturn,
+        Uranus,
+        Neptune
     }
 }
