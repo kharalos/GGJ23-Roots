@@ -80,7 +80,7 @@ public class PlayerMovement : MonoBehaviour
         
         engineSystem.SetFuelEmission(verticalInput , boostActive);
 
-        if (!Input.GetMouseButton(2))
+        if (!Input.GetKey(KeyCode.Space))
         {
             xRotation -= mouseY;
             yRotation -= mouseX;
@@ -92,7 +92,7 @@ public class PlayerMovement : MonoBehaviour
         _rigidbody.AddRelativeTorque(Vector3.forward * (yRotation * torqueSpeed));
         _rigidbody.AddRelativeTorque(Vector3.right * (xRotation * torqueSpeed));
 
-        if(!Input.GetMouseButton(2))
+        if(!Input.GetKey(KeyCode.Space))
         {
             xRotation = Mathf.Lerp(xRotation, 0f, Time.deltaTime * 2f);
             yRotation = Mathf.Lerp(yRotation, 0f, Time.deltaTime * 2f);

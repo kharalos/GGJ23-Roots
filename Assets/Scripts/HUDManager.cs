@@ -133,7 +133,7 @@ public class HUDManager : MonoBehaviour
 
     public void GameOver(string causeOfDeath)
     {
-        causeOfDeathText.text = "Cause Of Death:" + causeOfDeath;
+        causeOfDeathText.text = "Cause Of Death: " + causeOfDeath;
         Time.timeScale = 0f;
         Cursor.lockState = CursorLockMode.None;
         gameOverPanel.SetActive(true);
